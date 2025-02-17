@@ -35,7 +35,7 @@ except Exception as e:
     raise
 
 @app.post("/process-image/")
-async def process_image(file: UploadFile = File(...)):
+async def process_image(file: UploadFile = File(...), return_json: bool = False):
     logger.info(f"Received file: {file.filename}")
     
     if not file.filename.lower().endswith(('.png', '.jpg', '.jpeg')):
@@ -45,7 +45,6 @@ async def process_image(file: UploadFile = File(...)):
     output_dir = Path('output')
     output_dir.mkdir(exist_ok=True)
 
-    
     try:
         # Open the uploaded image file
         image = Image.open(file.file)
@@ -58,16 +57,18 @@ async def process_image(file: UploadFile = File(...)):
         
         logger.info(f"File saved temporarily at: {image_path}")
         
-        # Create overlay image with both original and segmentation
-        result_image = display_segmentation(image_path)
+        # Process the image
+        result = display_segmentation(image_path, return_json=return_json)
         
-            # Save the processed image to a BytesIO object
-        img_byte_arr = BytesIO()
-        result_image.save(img_byte_arr, format=image.format)
-        img_byte_arr.seek(0)
-
-        # Return the processed image as a streaming response
-        return StreamingResponse(img_byte_arr, media_type=file.content_type)
+        if return_json:
+            # If JSON response is requested, return the dictionary directly
+            return result
+        else:
+            # If image response is requested, return as streaming response
+            img_byte_arr = BytesIO()
+            result.save(img_byte_arr, format=image.format or 'PNG')
+            img_byte_arr.seek(0)
+            return StreamingResponse(img_byte_arr, media_type=file.content_type)
             
     except Exception as e:
         logger.error(f"Error processing image: {str(e)}")
@@ -78,7 +79,7 @@ async def process_image(file: UploadFile = File(...)):
         if os.path.exists(image_path):
             os.remove(image_path)
             logger.info(f"Temporary file removed: {image_path}")
-        
+
 @app.get("/health")
 async def health_check():
     return {"status": "healthy"}
@@ -88,6 +89,6 @@ async def process_image(file: UploadFile = File(...)):
     image_path = os.path.join("output", f"temp_{file.filename}")
     return {"Name":f'{file.filename}',"Path":f'{image_path}'}
 
-# Use the following
+
 
 # Run the app with: uvicorn main:app --reload 

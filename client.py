@@ -13,7 +13,7 @@ def process_image(image_path, op_path):
     Returns:
         Image: The processed image
     """
-    url = "http://127.0.0.1:8000/process-image/"
+    url = "http://172.31.85.197:8080/process-image/"
     
     # Ensure the image file exists
     if not os.path.exists(image_path):

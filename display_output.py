@@ -2,11 +2,12 @@ from PIL import Image
 import matplotlib.pyplot as plt
 from app import segment_image
 import matplotlib
+import numpy as np
 matplotlib.use('Agg')  # Use Agg backend instead of Qt5Agg
 
 def create_overlay_image(image_path):
     """
-    Creates an overlay image with the segmentation mask.
+    Creates an overlay image with the segmentation mask on the original image.
     Returns the overlay image as a PIL Image object.
     """
     # Load original image
@@ -15,27 +16,28 @@ def create_overlay_image(image_path):
     # Get segmentation mask
     mask = segment_image(image_path)
     
-    # Create figure with subplots
-    fig = plt.figure(figsize=(10, 5))
+    # Create figure
+    fig = plt.figure(figsize=(8, 8))
     
-    # Original image
-    plt.subplot(1, 2, 1)
+    # Create overlay
     plt.imshow(original_image)
-    plt.title('Original Image')
-    plt.axis('off')
-    
-    # Overlay
-    plt.subplot(1, 2, 2)
-    plt.imshow(original_image)
-    plt.imshow(mask, alpha=0.5, cmap='jet')
-    plt.title('Pupil Segmentation Overlay')
+    plt.imshow(mask, alpha=0.5)
     plt.axis('off')
     
     # Convert plot to image
     fig.canvas.draw()
-    plot_image = Image.frombytes('RGB', 
-                                fig.canvas.get_width_height(),
-                                fig.canvas.tostring_rgb())
+    
+    # Get the RGBA buffer from the SSfigure
+    w, h = fig.canvas.get_width_height()
+    buf = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
+    buf.shape = (h, w, 4)
+    
+    # Convert to RGB
+    buf = buf[:,:,:3]
+    
+    # Convert to PIL Image
+    plot_image = Image.fromarray(buf)
+    
     plt.close(fig)
     
     return plot_image
@@ -45,7 +47,8 @@ def display_segmentation(image_path):
     Displays the segmentation result.
     """
     result = create_overlay_image(image_path)
-    result.show()
+    return result
 
-# # Example usage:
-# display_segmentation('Vishnu_img.jpg') 
+# Example usage:
+# if __name__ == "__main__":
+#     display_segmentation('Vishnu_img.jpg') 

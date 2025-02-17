@@ -3,6 +3,8 @@ import matplotlib.pyplot as plt
 from app import segmenter  # Import the global segmenter instance
 import matplotlib
 import numpy as np
+import base64
+from io import BytesIO
 matplotlib.use('Agg')  # Use Agg backend instead of Qt5Agg
 
 def create_overlay_image(image_path):
@@ -42,13 +44,32 @@ def create_overlay_image(image_path):
     
     return plot_image
 
-def display_segmentation(image_path):
+def display_segmentation(image_path, return_json=False):
     """
     Displays the segmentation result.
+    If return_json is True, returns a dictionary with base64 encoded image.
+    Otherwise returns the PIL Image object.
     """
-    result = create_overlay_image(image_path)
-    return result
+    result_image = create_overlay_image(image_path)
+    
+    if return_json:
+        # Convert PIL image to base64 string
+        buffered = BytesIO()
+        result_image.save(buffered, format="PNG")
+        img_str = base64.b64encode(buffered.getvalue()).decode()
+        
+        # Create response dictionary
+        response = {
+            "image_data": img_str,
+            "format": "PNG",
+            "encoding": "base64",
+            "message": "Successfully processed image"
+        }
+        return response
+    
+    return result_image
 
 # Example usage:
 # if __name__ == "__main__":
-#     display_segmentation('Vishnu_img.jpg') 
+#     result = display_segmentation('Vishnu_img.jpg', return_json=True)
+#     print(result['image_data'][:100])  # Print first 100 chars of base64 string 

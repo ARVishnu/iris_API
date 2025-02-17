@@ -9,6 +9,7 @@ from io import BytesIO
 from PIL import Image
 from pathlib import Path
 from display_output import display_segmentation
+from app import IrisSegmenter
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -25,10 +26,9 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Initialize the model session globally
+# Initialize the segmenter globally
 try:
-    model_path = 'iris_semseg_upp_scse_mobilenetv2.onnx'
-    session = ort.InferenceSession(model_path)
+    segmenter = IrisSegmenter()
     logger.info("Model loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load model: {str(e)}")
@@ -87,5 +87,7 @@ async def health_check():
 async def process_image(file: UploadFile = File(...)):
     image_path = os.path.join("output", f"temp_{file.filename}")
     return {"Name":f'{file.filename}',"Path":f'{image_path}'}
+
+# Use the following
 
 # Run the app with: uvicorn main:app --reload 

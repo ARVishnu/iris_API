@@ -1,6 +1,6 @@
 from PIL import Image
 import matplotlib.pyplot as plt
-from app import segment_image
+from app import segmenter  # Import the global segmenter instance
 import matplotlib
 import numpy as np
 matplotlib.use('Agg')  # Use Agg backend instead of Qt5Agg
@@ -13,8 +13,8 @@ def create_overlay_image(image_path):
     # Load original image
     original_image = Image.open(image_path).convert('RGB')
     
-    # Get segmentation mask
-    mask = segment_image(image_path)
+    # Get segmentation mask using the global segmenter instance
+    mask = segmenter.segment_image(image_path)
     
     # Create figure
     fig = plt.figure(figsize=(8, 8))
@@ -27,7 +27,7 @@ def create_overlay_image(image_path):
     # Convert plot to image
     fig.canvas.draw()
     
-    # Get the RGBA buffer from the SSfigure
+    # Get the RGBA buffer from the figure
     w, h = fig.canvas.get_width_height()
     buf = np.frombuffer(fig.canvas.buffer_rgba(), dtype=np.uint8)
     buf.shape = (h, w, 4)

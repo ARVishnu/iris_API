@@ -8,7 +8,7 @@ import logging
 from io import BytesIO
 from PIL import Image
 from pathlib import Path
-from app import segment_image
+from display_output import display_segmentation
 
 # Set up logging
 logging.basicConfig(level=logging.INFO)
@@ -59,7 +59,7 @@ async def process_image(file: UploadFile = File(...)):
         logger.info(f"File saved temporarily at: {image_path}")
         
         # Create overlay image with both original and segmentation
-        result_image = segment_image(image_path)
+        result_image = display_segmentation(image_path)
         
             # Save the processed image to a BytesIO object
         img_byte_arr = BytesIO()
@@ -73,11 +73,11 @@ async def process_image(file: UploadFile = File(...)):
         logger.error(f"Error processing image: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
         
-    # finally:
-        # # Clean up the temporary file
-        # if os.path.exists(image_path):
-        #     os.remove(image_path)
-        #     logger.info(f"Temporary file removed: {image_path}")
+    finally:
+        # Clean up the temporary file
+        if os.path.exists(image_path):
+            os.remove(image_path)
+            logger.info(f"Temporary file removed: {image_path}")
         
 @app.get("/health")
 async def health_check():
